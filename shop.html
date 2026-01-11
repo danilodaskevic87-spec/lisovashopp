@@ -8,41 +8,76 @@
 <body>
 
 <h2>🛒 Магазин</h2>
-<div id="profile"></div>
-<button onclick="buy()">Купити</button>
+
+<div id="profile">Завантаження...</div>
+<br>
+
+<button id="buyBtn">Купити</button>
 <p id="msg"></p>
 
 <script>
-const supabase = supabaseJs.createClient(
+/* === Supabase client (sb) === */
+const sb = supabaseJs.createClient(
   'https://mefzopeenhfdqfatbjaq.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lZnpvcGVlbmhmZHFmYXRiamFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxOTg1MjQsImV4cCI6MjA4Mjc3NDUyNH0.l_yS9Vd18eb9VFs8i9u-jl9604eUY4l42tdfXEjOdhI'
 )
 
+/* product з URL */
 const productName = new URLSearchParams(location.search).get('product')
+const profile = document.getElementById('profile')
+const msg = document.getElementById('msg')
 
 async function checkAuth() {
-  const { data } = await supabase.auth.getUser()
+  const { data } = await sb.auth.getUser()
   if (!data.user) {
     location.href = 'index.html'
   }
 }
 
 async function loadProfile() {
-  const { data } = await supabase
+  const { data, error } = await sb
     .from('bank')
-    .select('balance, rank')
+    .select('idd, name, rank, balance')
     .single()
 
-  profile.textContent =
-    'Баланс: ' + data.balance + ' | Ранг: ' + data.rank
+  if (error) {
+    profile.textContent = '❌ Помилка завантаження профілю'
+    return
+  }
+
+  profile.innerHTML = `
+    🆔 IDD: ${data.idd ?? '-'}<br>
+    👤 Імʼя: ${data.name ?? '-'}<br>
+    🎖️ Ранг: ${data.rank}<br>
+    💰 Баланс: ${data.balance}
+  `
 }
 
-async function buy() {
-  const { data } = await supabase.rpc('buy_product', {
+document.getElementById('buyBtn').onclick = async () => {
+  if (!productName) {
+    msg.textContent = '❌ Продукт не вказаний'
+    return
+  }
+
+  msg.textContent = '⏳ Покупка...'
+
+  const { data, error } = await sb.rpc('buy_product', {
     p_product_name: productName
   })
-  msg.textContent = data
-  loadProfile()
+
+  if (error) {
+    msg.textContent = '❌ Помилка'
+    return
+  }
+
+  if (data === 'SUCCESS') {
+    msg.textContent = '✅ Купівля успішна'
+    loadProfile()
+  } else if (data === 'NOT_ENOUGH_MONEY') {
+    msg.textContent = '🚫 Недостатньо коштів'
+  } else {
+    msg.textContent = '❌ Продукт не знайдено'
+  }
 }
 
 checkAuth()
