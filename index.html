@@ -5,10 +5,12 @@
   <title>Акаунт</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     * { box-sizing: border-box }
+
     body {
       margin: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
@@ -23,7 +25,7 @@
     .card {
       width: 100%;
       max-width: 420px;
-      background: rgba(15, 23, 42, 0.9);
+      background: rgba(15, 23, 42, 0.95);
       border-radius: 16px;
       padding: 24px;
       box-shadow: 0 20px 60px rgba(0,0,0,.5);
@@ -150,11 +152,13 @@
 </div>
 
 <script>
+/* === Supabase client === */
 window.sb = supabase.createClient(
   'https://mefzopeenhfdqfatbjaq.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lZnpvcGVlbmhmZHFmYXRiamFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxOTg1MjQsImV4cCI6MjA4Mjc3NDUyNH0.l_yS9Vd18eb9VFs8i9u-jl9604eUY4l42tdfXEjOdhI'
 )
 
+/* LOGIN */
 loginBtn.onclick = async () => {
   msg.textContent = '⏳ Вхід...'
   const { error } = await sb.auth.signInWithPassword({
@@ -165,6 +169,7 @@ loginBtn.onclick = async () => {
   else loadProfile()
 }
 
+/* REGISTER */
 registerBtn.onclick = async () => {
   const { error } = await sb.auth.signUp({
     email: email.value,
@@ -173,14 +178,23 @@ registerBtn.onclick = async () => {
   msg.textContent = error ? error.message : '📧 Перевір пошту'
 }
 
+/* LOAD PROFILE — ГОЛОВНЕ */
 async function loadProfile() {
-  const { data: user } = await sb.auth.getUser()
-  if (!user.user) return
+  const { data: userRes } = await sb.auth.getUser()
+  const user = userRes.user
 
-  const { data } = await sb
+  if (!user) return
+
+  const { data, error } = await sb
     .from('bank')
     .select('idd,name,rank,balance,is_vip_user')
+    .eq('user_id', user.id)   // 🔥 ОБОВʼЯЗКОВО
     .single()
+
+  if (error || !data) {
+    msg.textContent = '❌ Профіль не знайдено в bank'
+    return
+  }
 
   loginBox.style.display = 'none'
   profileBox.style.display = 'block'
@@ -192,15 +206,18 @@ async function loadProfile() {
   vip.textContent = data.is_vip_user ? 'YES ⭐' : 'NO'
 }
 
+/* LOGOUT */
 async function logout() {
   await sb.auth.signOut()
   location.reload()
 }
 
+/* SHOP */
 function goShop() {
   location.href = 'shop.html'
 }
 
+/* AUTO */
 loadProfile()
 </script>
 
