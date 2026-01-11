@@ -3,62 +3,69 @@
 <head>
   <meta charset="UTF-8">
   <title>Магазин</title>
-
-  <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<h2>🛒 Магазин</h2>
+<h2>🛒 Підтвердження покупки</h2>
 
-<div id="profile">Завантаження...</div>
+<div id="productInfo">⏳ Завантаження товару...</div>
 <br>
 
-<button id="buyBtn">Купити</button>
+<button id="buyBtn">✅ Підтвердити покупку</button>
 <p id="msg"></p>
 
 <script>
-/* === ГЛОБАЛЬНИЙ Supabase client === */
+/* Supabase */
 window.sb = supabase.createClient(
   'https://mefzopeenhfdqfatbjaq.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lZnpvcGVlbmhmZHFmYXRiamFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxOTg1MjQsImV4cCI6MjA4Mjc3NDUyNH0.l_yS9Vd18eb9VFs8i9u-jl9604eUY4l42tdfXEjOdhI'
 )
 
+/* 1️⃣ беремо product з QR */
 const productName = new URLSearchParams(location.search).get('product')
-const profile = document.getElementById('profile')
+const productInfo = document.getElementById('productInfo')
 const msg = document.getElementById('msg')
 
+/* 2️⃣ перевірка логіну */
 async function checkAuth() {
   const { data } = await sb.auth.getUser()
-  if (!data.user) location.href = 'index.html'
+  if (!data.user) {
+    location.href = 'index.html'
+    return false
+  }
+  return true
 }
 
-async function loadProfile() {
+/* 3️⃣ показуємо товар (БЕЗ ЦІНИ З URL) */
+async function loadProduct() {
+  if (!productName) {
+    productInfo.textContent = '❌ Товар не вказаний'
+    buyBtn.disabled = true
+    return
+  }
+
   const { data, error } = await sb
-    .from('bank')
-    .select('idd, name, rank, balance')
+    .from('products')
+    .select('name, price')
+    .eq('name', productName)
     .single()
 
   if (error) {
-    profile.textContent = '❌ Помилка завантаження профілю'
+    productInfo.textContent = '❌ Товар не знайдено'
+    buyBtn.disabled = true
     return
   }
 
-  profile.innerHTML = `
-    🆔 IDD: ${data.idd ?? '-'}<br>
-    👤 Імʼя: ${data.name ?? '-'}<br>
-    🎖️ Ранг: ${data.rank}<br>
-    💰 Баланс: ${data.balance}
+  productInfo.innerHTML = `
+    📦 Товар: <b>${data.name}</b><br>
+    💰 Ціна: <b>${data.price}</b>
   `
 }
 
+/* 4️⃣ покупка */
 buyBtn.onclick = async () => {
-  if (!productName) {
-    msg.textContent = '❌ Продукт не вказаний'
-    return
-  }
-
-  msg.textContent = '⏳ Покупка...'
+  msg.textContent = '⏳ Обробка...'
 
   const { data, error } = await sb.rpc('buy_product', {
     p_product_name: productName
@@ -70,17 +77,22 @@ buyBtn.onclick = async () => {
   }
 
   if (data === 'SUCCESS') {
-    msg.textContent = '✅ Купівля успішна'
-    loadProfile()
+    msg.textContent = '✅ Покупка успішна! Очікуй видачі'
+    buyBtn.disabled = true
   } else if (data === 'NOT_ENOUGH_MONEY') {
     msg.textContent = '🚫 Недостатньо коштів'
   } else {
-    msg.textContent = '❌ Продукт не знайдено'
+    msg.textContent = '❌ Неможливо купити'
   }
 }
 
-checkAuth()
-loadProfile()
+/* 🚀 старт */
+(async () => {
+  const ok = await checkAuth()
+  if (ok) {
+    loadProduct()
+  }
+})()
 </script>
 
 </body>
