@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Вхід</title>
+
+  <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -12,19 +14,25 @@
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Пароль">
 
-<button onclick="login()">Увійти</button>
-<button onclick="register()">Реєстрація</button>
+<button id="loginBtn">Увійти</button>
+<button id="registerBtn">Реєстрація</button>
 
 <p id="msg"></p>
 
 <script>
+/* === ЄДИНИЙ script === */
 const supabase = supabaseJs.createClient(
   'https://mefzopeenhfdqfatbjaq.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lZnpvcGVlbmhmZHFmYXRiamFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxOTg1MjQsImV4cCI6MjA4Mjc3NDUyNH0.l_yS9Vd18eb9VFs8i9u-jl9604eUY4l42tdfXEjOdhI'
 )
 
-async function login() {
+const email = document.getElementById('email')
+const password = document.getElementById('password')
+const msg = document.getElementById('msg')
+
+document.getElementById('loginBtn').onclick = async () => {
   msg.textContent = '⏳ Вхід...'
+
   const { error } = await supabase.auth.signInWithPassword({
     email: email.value,
     password: password.value
@@ -37,8 +45,9 @@ async function login() {
   }
 }
 
-async function register() {
+document.getElementById('registerBtn').onclick = async () => {
   msg.textContent = '⏳ Реєстрація...'
+
   const { error } = await supabase.auth.signUp({
     email: email.value,
     password: password.value
