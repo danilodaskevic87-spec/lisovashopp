@@ -4,47 +4,13 @@
   <meta charset="UTF-8">
   <title>Магазин</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body {
-      font-family: Arial;
-      background: #0f172a;
-      color: #e5e7eb;
-      padding: 20px;
-    }
-    .card {
-      max-width: 500px;
-      margin: auto;
-      padding: 20px;
-      border-radius: 10px;
-      background: rgba(0,0,0,0.2);
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-    }
-    .row { margin-top: 6px }
-  </style>
 </head>
 <body>
 
-<div class="card">
-  <h2>👤 Профіль</h2>
-  <div class="row">🆔 IDD: <b id="idd"></b></div>
-  <div class="row">👤 Імʼя: <b id="name"></b></div>
-  <div class="row">🎖️ Ранг: <b id="rank"></b></div>
-  <div class="row">💰 Баланс: <b id="balance"></b></div>
-  <div class="row">⭐ VIP: <b id="vip"></b></div>
-</div>
-
-<br>
-
-<div class="card">
-  <h2>🛒 Купівля</h2>
-  <p id="product"></p>
-  <button onclick="buy()">Купити</button>
-  <p id="msg"></p>
-</div>
+<h2>🛒 Магазин</h2>
+<div id="profile"></div>
+<button onclick="buy()">Купити</button>
+<p id="msg"></p>
 
 <script>
 const supabase = supabaseJs.createClient(
@@ -52,54 +18,31 @@ const supabase = supabaseJs.createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lZnpvcGVlbmhmZHFmYXRiamFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxOTg1MjQsImV4cCI6MjA4Mjc3NDUyNH0.l_yS9Vd18eb9VFs8i9u-jl9604eUY4l42tdfXEjOdhI'
 )
 
-// product з URL: ?product=vip
 const productName = new URLSearchParams(location.search).get('product')
-product.textContent = productName
-  ? '📦 Продукт: ' + productName
-  : '❌ Продукт не вказаний'
 
 async function checkAuth() {
   const { data } = await supabase.auth.getUser()
   if (!data.user) {
-    location.href = 'login.html'
+    location.href = 'index.html'
   }
 }
 
 async function loadProfile() {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from('bank')
-    .select('idd,name,rank,balance,is_vip_user')
+    .select('balance, rank')
     .single()
 
-  if (error) return
-
-  idd.textContent = data.idd ?? '-'
-  name.textContent = data.name ?? '-'
-  rank.textContent = data.rank
-  balance.textContent = data.balance + ' 💸'
-  vip.textContent = data.is_vip_user ? 'YES ⭐' : 'NO'
+  profile.textContent =
+    'Баланс: ' + data.balance + ' | Ранг: ' + data.rank
 }
 
 async function buy() {
-  if (!productName) return
-
-  msg.textContent = '⏳ Обробка...'
-  const { data, error } = await supabase
-    .rpc('buy_product', { p_product_name: productName })
-
-  if (error) {
-    msg.textContent = '❌ Помилка'
-    return
-  }
-
-  if (data === 'SUCCESS') {
-    msg.textContent = '✅ Купівля успішна'
-    loadProfile()
-  } else if (data === 'NOT_ENOUGH_MONEY') {
-    msg.textContent = '🚫 Недостатньо коштів'
-  } else {
-    msg.textContent = '❌ Продукт не знайдено'
-  }
+  const { data } = await supabase.rpc('buy_product', {
+    p_product_name: productName
+  })
+  msg.textContent = data
+  loadProfile()
 }
 
 checkAuth()
