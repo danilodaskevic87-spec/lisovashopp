@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Магазин</title>
+
+  <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -16,22 +18,19 @@
 <p id="msg"></p>
 
 <script>
-/* === Supabase client (sb) === */
-const sb = supabaseJs.createClient(
+/* === ГЛОБАЛЬНИЙ Supabase client === */
+window.sb = supabase.createClient(
   'https://mefzopeenhfdqfatbjaq.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lZnpvcGVlbmhmZHFmYXRiamFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxOTg1MjQsImV4cCI6MjA4Mjc3NDUyNH0.l_yS9Vd18eb9VFs8i9u-jl9604eUY4l42tdfXEjOdhI'
 )
 
-/* product з URL */
 const productName = new URLSearchParams(location.search).get('product')
 const profile = document.getElementById('profile')
 const msg = document.getElementById('msg')
 
 async function checkAuth() {
   const { data } = await sb.auth.getUser()
-  if (!data.user) {
-    location.href = 'index.html'
-  }
+  if (!data.user) location.href = 'index.html'
 }
 
 async function loadProfile() {
@@ -53,7 +52,7 @@ async function loadProfile() {
   `
 }
 
-document.getElementById('buyBtn').onclick = async () => {
+buyBtn.onclick = async () => {
   if (!productName) {
     msg.textContent = '❌ Продукт не вказаний'
     return
