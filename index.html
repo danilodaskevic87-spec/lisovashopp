@@ -4,19 +4,6 @@
   <meta charset="UTF-8">
   <title>Вхід</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    body {
-      font-family: Arial;
-      background: #0f172a;
-      color: #e5e7eb;
-      padding: 20px;
-    }
-    input, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-    }
-  </style>
 </head>
 <body>
 
@@ -26,7 +13,7 @@
 <input id="password" type="password" placeholder="Пароль">
 
 <button onclick="login()">Увійти</button>
-<button onclick="register()">Зареєструватися</button>
+<button onclick="register()">Реєстрація</button>
 
 <p id="msg"></p>
 
@@ -44,9 +31,9 @@ async function login() {
   })
 
   if (error) {
-    msg.textContent = '❌ ' + error.message
+    msg.textContent = error.message
   } else {
-    location.href = 'shop.html'
+    location.href = 'shop.html?product=vip'
   }
 }
 
@@ -58,8 +45,8 @@ async function register() {
   })
 
   msg.textContent = error
-    ? '❌ ' + error.message
-    : '📧 Перевір пошту і увійди'
+    ? error.message
+    : '📧 Перевір пошту'
 }
 </script>
 
