@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Вхід</title>
+
+  <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -20,8 +22,8 @@
 <p id="msg"></p>
 
 <script>
-/* === ЗРОБИЛИ ГЛОБАЛЬНИМ === */
-window.sb = supabaseJs.createClient(
+/* === ГЛОБАЛЬНИЙ Supabase client === */
+window.sb = supabase.createClient(
   'https://mefzopeenhfdqfatbjaq.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lZnpvcGVlbmhmZHFmYXRiamFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxOTg1MjQsImV4cCI6MjA4Mjc3NDUyNH0.l_yS9Vd18eb9VFs8i9u-jl9604eUY4l42tdfXEjOdhI'
 )
@@ -30,7 +32,7 @@ const email = document.getElementById('email')
 const password = document.getElementById('password')
 const msg = document.getElementById('msg')
 
-document.getElementById('loginBtn').onclick = async () => {
+loginBtn.onclick = async () => {
   msg.textContent = '⏳ Вхід...'
 
   const { error } = await sb.auth.signInWithPassword({
@@ -45,7 +47,7 @@ document.getElementById('loginBtn').onclick = async () => {
   }
 }
 
-document.getElementById('registerBtn').onclick = async () => {
+registerBtn.onclick = async () => {
   msg.textContent = '⏳ Реєстрація...'
 
   const { error } = await sb.auth.signUp({
@@ -55,7 +57,7 @@ document.getElementById('registerBtn').onclick = async () => {
 
   msg.textContent = error
     ? '❌ ' + error.message
-    : '📧 Перевір пошту'
+    : '📧 Перевір пошту і зайди'
 }
 </script>
 
