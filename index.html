@@ -20,8 +20,8 @@
 <p id="msg"></p>
 
 <script>
-/* === Supabase client (sb) === */
-const sb = supabaseJs.createClient(
+/* === ЗРОБИЛИ ГЛОБАЛЬНИМ === */
+window.sb = supabaseJs.createClient(
   'https://mefzopeenhfdqfatbjaq.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lZnpvcGVlbmhmZHFmYXRiamFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxOTg1MjQsImV4cCI6MjA4Mjc3NDUyNH0.l_yS9Vd18eb9VFs8i9u-jl9604eUY4l42tdfXEjOdhI'
 )
@@ -55,7 +55,7 @@ document.getElementById('registerBtn').onclick = async () => {
 
   msg.textContent = error
     ? '❌ ' + error.message
-    : '📧 Перевір пошту і зайди'
+    : '📧 Перевір пошту'
 }
 </script>
 
