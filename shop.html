@@ -3,96 +3,115 @@
 <head>
   <meta charset="UTF-8">
   <title>Магазин</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body{
+      margin:0;
+      font-family:system-ui;
+      background:linear-gradient(160deg,#020617,#0f172a);
+      color:#e5e7eb;
+      min-height:100vh;
+      padding:20px;
+    }
+    h2{text-align:center}
+    .product{
+      background:#020617;
+      border:1px solid #334155;
+      border-radius:16px;
+      padding:20px;
+      max-width:400px;
+      margin:30px auto;
+      box-shadow:0 10px 40px rgba(0,0,0,.6);
+    }
+    .price{font-size:24px;font-weight:700;margin-top:10px}
+    button{
+      width:100%;
+      padding:14px;
+      margin-top:16px;
+      border:none;
+      border-radius:12px;
+      background:linear-gradient(135deg,#22c55e,#16a34a);
+      color:#022c22;
+      font-size:16px;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .msg{text-align:center;margin-top:10px}
+  </style>
 </head>
 <body>
 
-<h2>🛒 Підтвердження покупки</h2>
+<h2>🛒 Магазин</h2>
 
-<div id="productInfo">⏳ Завантаження товару...</div>
-<br>
-
-<button id="buyBtn">✅ Підтвердити покупку</button>
-<p id="msg"></p>
+<div class="product">
+  <div id="productName">⏳ Завантаження товару...</div>
+  <div class="price" id="price"></div>
+  <button id="buyBtn">✅ Купити</button>
+  <div class="msg" id="msg"></div>
+</div>
 
 <script>
-/* Supabase */
 window.sb = supabase.createClient(
   'https://mefzopeenhfdqfatbjaq.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lZnpvcGVlbmhmZHFmYXRiamFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxOTg1MjQsImV4cCI6MjA4Mjc3NDUyNH0.l_yS9Vd18eb9VFs8i9u-jl9604eUY4l42tdfXEjOdhI'
 )
 
-/* 1️⃣ беремо product з QR */
-const productName = new URLSearchParams(location.search).get('product')
-const productInfo = document.getElementById('productInfo')
-const msg = document.getElementById('msg')
+const productCode = new URLSearchParams(location.search).get('product')
 
-/* 2️⃣ перевірка логіну */
-async function checkAuth() {
+async function checkAuth(){
   const { data } = await sb.auth.getUser()
-  if (!data.user) {
-    location.href = 'index.html'
-    return false
-  }
-  return true
+  if(!data.user) location.href='index.html'
 }
 
-/* 3️⃣ показуємо товар (БЕЗ ЦІНИ З URL) */
-async function loadProduct() {
-  if (!productName) {
-    productInfo.textContent = '❌ Товар не вказаний'
-    buyBtn.disabled = true
+async function loadProduct(){
+  if(!productCode){
+    productName.textContent='❌ Товар не вказаний'
+    buyBtn.disabled=true
     return
   }
 
   const { data, error } = await sb
     .from('products')
-    .select('name, price')
-    .eq('name', productName)
-    .single()
+    .select('name,price')
+    .eq('name', productCode)
+    .maybeSingle()
 
-  if (error) {
-    productInfo.textContent = '❌ Товар не знайдено'
-    buyBtn.disabled = true
+  if(error || !data){
+    productName.textContent='❌ Товар не знайдено'
+    buyBtn.disabled=true
     return
   }
 
-  productInfo.innerHTML = `
-    📦 Товар: <b>${data.name}</b><br>
-    💰 Ціна: <b>${data.price}</b>
-  `
+  productName.textContent='📦 ' + data.name
+  price.textContent='💰 ' + data.price
 }
 
-/* 4️⃣ покупка */
-buyBtn.onclick = async () => {
-  msg.textContent = '⏳ Обробка...'
+buyBtn.onclick = async ()=>{
+  msg.textContent='⏳ Покупка...'
 
-  const { data, error } = await sb.rpc('buy_product', {
-    p_product_name: productName
+  const { data, error } = await sb.rpc('buy_product',{
+    p_product_name: productCode
   })
 
-  if (error) {
-    msg.textContent = '❌ Помилка'
+  if(error){
+    msg.textContent='❌ Помилка'
     return
   }
 
-  if (data === 'SUCCESS') {
-    msg.textContent = '✅ Покупка успішна! Очікуй видачі'
-    buyBtn.disabled = true
-  } else if (data === 'NOT_ENOUGH_MONEY') {
-    msg.textContent = '🚫 Недостатньо коштів'
-  } else {
-    msg.textContent = '❌ Неможливо купити'
+  if(data==='SUCCESS'){
+    msg.textContent='✅ Купівля успішна'
+    buyBtn.disabled=true
+  }else if(data==='NOT_ENOUGH_MONEY'){
+    msg.textContent='🚫 Недостатньо коштів'
+  }else{
+    msg.textContent='❌ Неможливо купити'
   }
 }
 
-/* 🚀 старт */
-(async () => {
-  const ok = await checkAuth()
-  if (ok) {
-    loadProduct()
-  }
-})()
+checkAuth()
+loadProduct()
 </script>
 
 </body>
