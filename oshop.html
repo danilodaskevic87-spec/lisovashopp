@@ -15,22 +15,10 @@ body{
   min-height:100vh;
   padding:20px;
 }
-h2{text-align:center}
-.balance{
-  max-width:500px;
-  margin:0 auto 20px;
-  padding:14px;
-  background:#020617;
-  border:1px solid #334155;
-  border-radius:14px;
-  text-align:center;
-}
 .products{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
   gap:16px;
-  max-width:1000px;
-  margin:0 auto;
 }
 .product{
   background:#020617;
@@ -47,7 +35,7 @@ button{
   padding:12px;
   border:none;
   border-radius:10px;
-  background:linear-gradient(135deg,#22c55e,#16a34a);
+  background:#22c55e;
   color:#022c22;
   font-weight:700;
 }
@@ -60,9 +48,8 @@ button:disabled{
 </head>
 <body>
 
-<h2>🛒 Онлайн магазин</h2>
+<h2 style="text-align:center">🛒 Онлайн магазин</h2>
 
-<div class="balance" id="balanceBox">⏳ Завантаження...</div>
 <div class="products" id="products"></div>
 <div class="msg" id="msg"></div>
 
@@ -75,24 +62,15 @@ const sb = supabase.createClient(
 async function checkAuth(){
   const { data } = await sb.auth.getUser()
   if(!data.user) location.href='index.html'
-  return data.user
-}
-
-async function loadBalance(user){
-  const { data } = await sb
-    .from('bank')
-    .select('balance')
-    .eq('user_id',user.id)
-    .maybeSingle()
-  balanceBox.textContent='💰 Баланс: '+data.balance+' 💸'
 }
 
 async function loadProducts(){
   const { data } = await sb
     .from('products')
-    .select('name,price,stock,description')
+    .select('name,price,stock,description,is_bezlim')
 
   products.innerHTML=''
+
   data.forEach(p=>{
     const d=document.createElement('div')
     d.className='product'
@@ -100,10 +78,10 @@ async function loadProducts(){
       <h3>${p.name}</h3>
       <div class="price">💰 ${p.price}</div>
       <div class="desc">${p.description ?? ''}</div>
-      <div class="stock">📦 В наявності: ${p.stock}</div>
-      <button ${p.stock<=0?'disabled':''}
+      ${p.is_bezlim ? `` : `<div class="stock">📦 В наявності: ${p.stock}</div>`}
+      <button ${(!p.is_bezlim && p.stock<=0) ? 'disabled' : ''}
         onclick="buy('${p.name}')">
-        ${p.stock>0?'Купити':'Немає'}
+        ${(!p.is_bezlim && p.stock<=0) ? 'Немає' : 'Купити'}
       </button>
     `
     products.appendChild(d)
@@ -111,30 +89,22 @@ async function loadProducts(){
 }
 
 async function buy(name){
-  msg.textContent='⏳ Обробка покупки...'
+  msg.textContent='⏳ Покупка...'
   const { data } = await sb.rpc('buy_product',{ p_product_name:name })
 
   if(data==='SUCCESS'){
     msg.textContent='✅ Покупка успішна'
-    const user=(await sb.auth.getUser()).data.user
-    loadBalance(user)
     loadProducts()
   }else if(data==='NOT_ENOUGH_MONEY'){
     msg.textContent='🚫 Недостатньо коштів'
   }else if(data==='OUT_OF_STOCK'){
     msg.textContent='📦 Товар закінчився'
     loadProducts()
-  }else{
-    msg.textContent='❌ Помилка'
   }
 }
 
-(async ()=>{
-  const user=await checkAuth()
-  await loadBalance(user)
-  await loadProducts()
-})()
-
+checkAuth()
+loadProducts()
 setInterval(loadProducts,5000)
 </script>
 
