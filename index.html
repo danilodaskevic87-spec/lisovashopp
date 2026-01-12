@@ -84,32 +84,13 @@
   <div id="profileBox" style="display:none">
     <h3>👤 Мій профіль</h3>
 
-    <div class="row">
-      <span class="label">🆔 IDD</span>
-      <span id="idd"></span>
-    </div>
+    <div class="row"><span class="label">🆔 IDD</span><span id="idd"></span></div>
+    <div class="row"><span class="label">👤 Імʼя</span><span id="userName"></span></div>
+    <div class="row"><span class="label">🎖️ Ранг</span><span id="rank"></span></div>
+    <div class="row"><span class="label">💰 Баланс</span><span id="balance"></span></div>
+    <div class="row"><span class="label">⭐ VIP</span><span id="vip"></span></div>
 
-    <div class="row">
-      <span class="label">👤 Імʼя</span>
-      <span id="userName"></span>
-    </div>
-
-    <div class="row">
-      <span class="label">🎖️ Ранг</span>
-      <span id="rank"></span>
-    </div>
-
-    <div class="row">
-      <span class="label">💰 Баланс</span>
-      <span id="balance"></span>
-    </div>
-
-    <div class="row">
-      <span class="label">⭐ VIP</span>
-      <span id="vip"></span>
-    </div>
-
-    <button onclick="goOshop()">🛒 Онлайн магазин</button>
+    <button onclick="location.href='oshop.html'">🛒 Онлайн магазин</button>
     <button onclick="location.href='history.html'">🧾 Історія покупок</button>
     <button onclick="logout()" class="secondary">🚪 Вийти</button>
   </div>
@@ -117,66 +98,67 @@
 </div>
 
 <script>
-/* === Supabase client === */
-const sb = supabase.createClient(
-  'https://mefzopeenhfdqfatbjaq.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lZnpvcGVlbmhmZHFmYXRiamFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxOTg1MjQsImV4cCI6MjA4Mjc3NDUyNH0.l_yS9Vd18eb9VFs8i9u-jl9604eUY4l42tdfXEjOdhI'
-)
+document.addEventListener('DOMContentLoaded', () => {
 
-/* === LOGIN === */
-loginBtn.onclick = async () => {
-  msg.textContent = '⏳ Вхід...'
-  const { error } = await sb.auth.signInWithPassword({
-    email: email.value,
-    password: password.value
-  })
-  if (error) msg.textContent = error.message
-}
+  const sb = supabase.createClient(
+    'https://mefzopeenhfdqfatbjaq.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lZnpvcGVlbmhmZHFmYXRiamFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxOTg1MjQsImV4cCI6MjA4Mjc3NDUyNH0.l_yS9Vd18eb9VFs8i9u-jl9604eUY4l42tdfXEjOdhI'
+  )
 
-/* === REGISTER === */
-registerBtn.onclick = async () => {
-  const { error } = await sb.auth.signUp({
-    email: email.value,
-    password: password.value
-  })
-  msg.textContent = error ? error.message : '📧 Перевір пошту'
-}
+  const loginBtn = document.getElementById('loginBtn')
+  const registerBtn = document.getElementById('registerBtn')
+  const email = document.getElementById('email')
+  const password = document.getElementById('password')
+  const msg = document.getElementById('msg')
 
-/* === LOAD PROFILE === */
-async function loadProfile() {
-  const { data } = await sb.auth.getUser()
-  if (!data.user) return
-
-  const { data: profile } = await sb
-    .from('bank')
-    .select('idd,name,rank,balance,is_vip_user')
-    .eq('user_id', data.user.id)
-    .maybeSingle()
-
-  if (!profile) {
-    msg.textContent = '❌ Профіль не знайдено'
-    return
+  loginBtn.onclick = async () => {
+    msg.textContent = '⏳ Вхід...'
+    const { error } = await sb.auth.signInWithPassword({
+      email: email.value,
+      password: password.value
+    })
+    if (error) msg.textContent = error.message
   }
 
-  loginBox.style.display = 'none'
-  profileBox.style.display = 'block'
+  registerBtn.onclick = async () => {
+    const { error } = await sb.auth.signUp({
+      email: email.value,
+      password: password.value
+    })
+    msg.textContent = error ? error.message : '📧 Перевір пошту'
+  }
 
-  idd.textContent = profile.idd
-  userName.textContent = profile.name
-  rank.textContent = profile.rank
-  balance.textContent = profile.balance + ' 💸'
-  vip.textContent = profile.is_vip_user ? 'YES ⭐' : 'NO'
-}
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (!session) return
 
-/* === LOGOUT === */
-async function logout() {
-  await sb.auth.signOut()
-  location.reload()
-}
+    const { data } = await sb
+      .from('bank')
+      .select('idd,name,rank,balance,is_vip_user')
+      .eq('user_id', session.user.id)
+      .maybeSingle()
 
-/* === GO SHOP === */
-function goOshop() {
-  location.href = 'oshop.html'
-}
+    if (!data) {
+      msg.textContent = '❌ Профіль не знайдено'
+      return
+    }
 
-/
+    loginBox.style.display = 'none'
+    profileBox.style.display = 'block'
+
+    idd.textContent = data.idd
+    userName.textContent = data.name
+    rank.textContent = data.rank
+    balance.textContent = data.balance + ' 💸'
+    vip.textContent = data.is_vip_user ? 'YES ⭐' : 'NO'
+  })
+
+  window.logout = async () => {
+    await sb.auth.signOut()
+    location.reload()
+  }
+
+})
+</script>
+
+</body>
+</html>
