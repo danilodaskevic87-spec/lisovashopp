@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<title>Історія покупок</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:system-ui;
+  background:linear-gradient(160deg,#020617,#0f172a);
+  color:#e5e7eb;
+  min-height:100vh;
+  padding:20px;
+}
+h2{text-align:center}
+.list{
+  max-width:800px;
+  margin:0 auto;
+  display:grid;
+  gap:12px;
+}
+.item{
+  background:#020617;
+  border:1px solid #334155;
+  border-radius:14px;
+  padding:14px;
+}
+.row{
+  display:flex;
+  justify-content:space-between;
+  margin-top:6px;
+}
+.pending{color:#facc15}
+.done{color:#22c55e}
+button{
+  margin-top:20px;
+  padding:12px;
+  width:100%;
+  border:none;
+  border-radius:10px;
+  background:#1e293b;
+  color:#e5e7eb;
+}
+</style>
+</head>
+<body>
+
+<h2>🧾 Мої покупки</h2>
+
+<div class="list" id="list">⏳ Завантаження...</div>
+
+<button onclick="location.href='index.html'">⬅ Назад</button>
+
+<script>
+const sb = supabase.createClient(
+  'https://mefzopeenhfdqfatbjaq.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lZnpvcGVlbmhmZHFmYXRiamFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxOTg1MjQsImV4cCI6MjA4Mjc3NDUyNH0.l_yS9Vd18eb9VFs8i9u-jl9604eUY4l42tdfXEjOdhI'
+)
+
+async function loadHistory(){
+  const { data: u } = await sb.auth.getUser()
+  if(!u.user) location.href='index.html'
+
+  const { data } = await sb
+    .from('purchases')
+    .select('product_name,price,status,created_at')
+    .eq('user_id',u.user.id)
+    .order('created_at',{ascending:false})
+
+  list.innerHTML=''
+
+  if(!data || data.length===0){
+    list.textContent='❌ Покупок ще не було'
+    return
+  }
+
+  data.forEach(p=>{
+    const d=document.createElement('div')
+    d.className='item'
+    d.innerHTML=`
+      <b>📦 ${p.product_name}</b>
+      <div class="row"><span>💰 Ціна</span><span>${p.price}</span></div>
+      <div class="row"><span>📅 Дата</span><span>${new Date(p.created_at).toLocaleString()}</span></div>
+      <div class="row">
+        <span>📌 Статус</span>
+        <span class="${p.status==='pending'?'pending':'done'}">
+          ${p.status==='pending'?'Очікує':'Видано'}
+        </span>
+      </div>
+    `
+    list.appendChild(d)
+  })
+}
+
+loadHistory()
+</script>
+
+</body>
+</html>
