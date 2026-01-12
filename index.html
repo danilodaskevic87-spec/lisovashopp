@@ -1,152 +1,38 @@
-<!DOCTYPE html>
+<!DOCTYPE html><!DOCTYPE html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
-  <title>Акаунт</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <style>
-    body{
-      margin:0;
-      font-family:system-ui;
-      background:linear-gradient(160deg,#020617,#0f172a);
-      color:#e5e7eb;
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-    .card{
-      width:100%;
-      max-width:420px;
-      background:#020617;
-      border-radius:18px;
-      padding:24px;
-      box-shadow:0 20px 50px rgba(0,0,0,.6);
-    }
-    h2,h3{text-align:center;margin-top:0}
-    input{
-      width:100%;
-      padding:12px;
-      margin-top:10px;
-      border-radius:10px;
-      border:1px solid #334155;
-      background:#020617;
-      color:#e5e7eb;
-    }
-    button{
-      width:100%;
-      padding:12px;
-      margin-top:12px;
-      border:none;
-      border-radius:10px;
-      background:linear-gradient(135deg,#38bdf8,#6366f1);
-      color:#020617;
-      font-weight:700;
-      cursor:pointer;
-    }
-    .secondary{background:#1e293b;color:#e5e7eb}
-    .row{
-      display:flex;
-      justify-content:space-between;
-      margin-top:10px;
-      padding:10px;
-      background:#020617;
-      border:1px solid #334155;
-      border-radius:10px;
-    }
-    .label{color:#94a3b8}
-    .msg{text-align:center;margin-top:10px;color:#fca5a5}
-  </style>
+<meta charset="UTF-8">
+<title>Акаунт</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{margin:0;font-family:system-ui;background:#020617;color:#e5e7eb;display:flex;align-items:center;justify-content:center;min-height:100vh}
+.card{background:#020617;border:1px solid #334155;border-radius:16px;padding:24px;width:100%;max-width:420px}
+.row{display:flex;justify-content:space-between;margin:8px 0}
+button{width:100%;padding:12px;margin-top:10px;border:none;border-radius:10px;background:#38bdf8;color:#020617;font-weight:700}
+.secondary{background:#1e293b;color:#e5e7eb}
+</style>
 </head>
 <body>
 
 <div class="card">
+<div id="loginBox">
+  <h3>🔐 Вхід</h3>
+  <input id="email" placeholder="Email"><br>
+  <input id="password" type="password" placeholder="Пароль"><br>
+  <button onclick="login()">Увійти</button>
+</div>
 
-  <!-- LOGIN -->
-  <div id="loginBox">
-    <h2>🔐 Вхід</h2>
-    <input id="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Пароль">
-    <button id="loginBtn">Увійти</button>
-    <button id="registerBtn" class="secondary">Реєстрація</button>
-    <div class="msg" id="msg"></div>
-  </div>
-
-  <!-- PROFILE -->
-  <div id="profileBox" style="display:none">
-    <h3>👤 Профіль</h3>
-
-    <div class="row"><span class="label">🆔 IDD</span><span id="idd"></span></div>
-    <div class="row"><span class="label">👤 Імʼя</span><span id="userName"></span></div>
-    <div class="row"><span class="label">🎖️ Ранг</span><span id="rank"></span></div>
-    <div class="row"><span class="label">💰 Баланс</span><span id="balance"></span></div>
-    <div class="row"><span class="label">⭐ VIP</span><span id="vip"></span></div>
-
-    <button onclick="goShop()">🛒 До магазину</button>
-    <button onclick="logout()" class="secondary">🚪 Вийти</button>
-  </div>
-
+<div id="profileBox" style="display:none">
+  <h3>👤 Профіль</h3>
+  <div class="row"><span>Імʼя</span><span id="userName"></span></div>
+  <div class="row"><span>Баланс</span><span id="balance"></span></div>
+  <button onclick="location.href='oshop.html'">🛒 Онлайн магазин</button>
+  <button class="secondary" onclick="logout()">Вийти</button>
+</div>
 </div>
 
 <script>
-window.sb = supabase.createClient(
-  'https://mefzopeenhfdqfatbjaq.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lZnpvcGVlbmhmZHFmYXRiamFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxOTg1MjQsImV4cCI6MjA4Mjc3NDUyNH0.l_yS9Vd18eb9VFs8i9u-jl9604eUY4l42tdfXEjOdhI'
-)
+const sb = supabase.createClient(
+ 'https://mefzopeenhfd
 
-loginBtn.onclick = async () => {
-  msg.textContent = '⏳ Вхід...'
-  const { error } = await sb.auth.signInWithPassword({
-    email: email.value,
-    password: password.value
-  })
-  if (error) msg.textContent = error.message
-  else loadProfile()
-}
-
-registerBtn.onclick = async () => {
-  const { error } = await sb.auth.signUp({
-    email: email.value,
-    password: password.value
-  })
-  msg.textContent = error ? error.message : '📧 Перевір пошту'
-}
-
-async function loadProfile(){
-  const { data: u } = await sb.auth.getUser()
-  if(!u.user) return
-
-  const { data, error } = await sb
-    .from('bank')
-    .select('idd,name,rank,balance,is_vip_user')
-    .eq('user_id', u.user.id)
-    .maybeSingle()
-
-  if(error || !data){
-    msg.textContent = '❌ Профіль не знайдено'
-    return
-  }
-
-  loginBox.style.display='none'
-  profileBox.style.display='block'
-
-  idd.textContent = data.idd
-  userName.textContent = data.name
-  rank.textContent = data.rank
-  balance.textContent = data.balance + ' 💸'
-  vip.textContent = data.is_vip_user ? 'YES ⭐' : 'NO'
-}
-
-async function logout(){
-  await sb.auth.signOut()
-  location.reload()
-}
-function goShop(){ location.href='shop.html' }
-
-loadProfile()
-</script>
-
-</body>
-</html>
