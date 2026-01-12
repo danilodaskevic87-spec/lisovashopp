@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<title>Онлайн магазин</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{margin:0;font-family:system-ui;background:#020617;color:#e5e7eb;padding:20px}
+.products{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.card{border:1px solid #334155;border-radius:16px;padding:16px}
+button{width:100%;padding:10px;border:none;border-radius:10px;background:#22c55e;color:#022c22;font-weight:700}
+button:disabled{background:#334155;color:#94a3b8}
+</style>
+</head>
+<body>
+
+<h2>🛒 Онлайн магазин</h2>
+<div id="products" class="products"></div>
+
+<script>
+const sb = supabase.createClient(
+ 'https://mefzopeenhfdqfatbjaq.supabase.co',
+ 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lZnpvcGVlbmhmZHFmYXRiamFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxOTg1MjQsImV4cCI6MjA4Mjc3NDUyNH0.l_yS9Vd18eb9VFs8i9u-jl9604eUY4l42tdfXEjOdhI'
+)
+
+async function loadProducts(){
+  const {data} = await sb.from('products').select('name,price,stock')
+  products.innerHTML=''
+  data.forEach(p=>{
+    products.innerHTML+=`
+      <div class="card">
+        <h3>${p.name}</h3>
+        <div>💰 ${p.price}</div>
+        <div>📦 ${p.stock}</div>
+        <button ${p.stock<=0?'disabled':''}
+          onclick="buy('${p.name}')">
+          ${p.stock>0?'Купити':'Немає'}
+        </button>
+      </div>`
+  })
+}
+
+async function buy(name){
+  await sb.rpc('buy_product',{p_product_name:name})
+  loadProducts()
+}
+
+/* 🔄 АВТООНОВЛЕННЯ КОЖНІ 5 СЕК */
+setInterval(loadProducts,5000)
+loadProducts()
+</script>
+</body>
+</html>
