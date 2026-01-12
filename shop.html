@@ -24,7 +24,6 @@ body{
   border:1px solid #334155;
   border-radius:18px;
   padding:24px;
-  box-shadow:0 20px 50px rgba(0,0,0,.6);
   text-align:center;
 }
 .price{font-size:26px;font-weight:700;margin:8px 0}
@@ -35,7 +34,7 @@ button{
   padding:14px;
   border:none;
   border-radius:12px;
-  background:linear-gradient(135deg,#22c55e,#16a34a);
+  background:#22c55e;
   color:#022c22;
   font-size:16px;
   font-weight:700;
@@ -64,28 +63,22 @@ const sb = supabase.createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lZnpvcGVlbmhmZHFmYXRiamFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxOTg1MjQsImV4cCI6MjA4Mjc3NDUyNH0.l_yS9Vd18eb9VFs8i9u-jl9604eUY4l42tdfXEjOdhI'
 )
 
-/* product from URL (не чіпаємо формат) */
+/* product from URL */
 let productCode = new URLSearchParams(location.search).get('product')
 if (!productCode && location.search.length > 1) {
   productCode = decodeURIComponent(location.search.slice(1))
 }
 
-/* auth */
+/* auth check */
 (async ()=>{
   const { data } = await sb.auth.getUser()
   if(!data.user) location.href='index.html'
 })()
 
 async function loadProduct(){
-  if(!productCode){
-    productName.textContent='❌ Товар не вказаний'
-    buyBtn.disabled=true
-    return
-  }
-
   const { data } = await sb
     .from('products')
-    .select('name,price,stock,description')
+    .select('name,price,stock,description,is_bezlim')
     .eq('name',productCode)
     .maybeSingle()
 
@@ -94,15 +87,23 @@ async function loadProduct(){
     buyBtn.disabled=true
     return
   }
+
   productName.textContent='📦 '+data.name
   price.textContent='💰 '+data.price
   description.textContent=data.description ?? ''
-  stock.textContent='📦 В наявності: '+data.stock
 
-  if(data.stock<=0){
+  /* ⬇️ ГОЛОВНА УМОВА */
+  if(data.is_bezlim === true){
+    stock.style.display='none'
+  } else {
+    stock.style.display='block'
+    stock.textContent='📦 В наявності: '+data.stock
+  }
+
+  if(data.stock <= 0 && data.is_bezlim === false){
     buyBtn.disabled=true
     buyBtn.textContent='Немає'
-  }else{
+  } else {
     buyBtn.disabled=false
     buyBtn.textContent='Купити'
   }
@@ -115,13 +116,11 @@ buyBtn.onclick = async ()=>{
   if(data==='SUCCESS'){
     msg.textContent='✅ Покупка успішна'
     loadProduct()
-  }else if(data==='NOT_ENOUGH_MONEY'){
+  } else if(data==='NOT_ENOUGH_MONEY'){
     msg.textContent='🚫 Недостатньо коштів'
-  }else if(data==='OUT_OF_STOCK'){
+  } else if(data==='OUT_OF_STOCK'){
     msg.textContent='📦 Товар закінчився'
     loadProduct()
-  }else{
-    msg.textContent='❌ Помилка'
   }
 }
 
