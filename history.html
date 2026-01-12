@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Історія покупок</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -15,18 +16,23 @@ body{
   min-height:100vh;
   padding:20px;
 }
-h2{text-align:center}
+h2{text-align:center;margin-bottom:20px}
 .list{
-  max-width:800px;
+  max-width:900px;
   margin:0 auto;
   display:grid;
-  gap:12px;
+  gap:14px;
 }
 .item{
   background:#020617;
   border:1px solid #334155;
-  border-radius:14px;
-  padding:14px;
+  border-radius:16px;
+  padding:16px;
+}
+.id{
+  font-size:14px;
+  color:#94a3b8;
+  margin-bottom:6px;
 }
 .row{
   display:flex;
@@ -36,9 +42,11 @@ h2{text-align:center}
 .pending{color:#facc15}
 .done{color:#22c55e}
 button{
-  margin-top:20px;
+  margin:24px auto 0;
   padding:12px;
   width:100%;
+  max-width:300px;
+  display:block;
   border:none;
   border-radius:10px;
   background:#1e293b;
@@ -61,13 +69,13 @@ const sb = supabase.createClient(
 )
 
 async function loadHistory(){
-  const { data: u } = await sb.auth.getUser()
-  if(!u.user) location.href='index.html'
+  const { data: auth } = await sb.auth.getUser()
+  if(!auth.user) location.href='index.html'
 
   const { data } = await sb
     .from('purchases')
-    .select('product_name,price,status,created_at')
-    .eq('user_id',u.user.id)
+    .select('id,product_name,price,status,created_at')
+    .eq('user_id',auth.user.id)
     .order('created_at',{ascending:false})
 
   list.innerHTML=''
@@ -78,12 +86,32 @@ async function loadHistory(){
   }
 
   data.forEach(p=>{
-    const d=document.createElement('div')
-    d.className='item'
-    d.innerHTML=`
+    const el=document.createElement('div')
+    el.className='item'
+    el.innerHTML=`
+      <div class="id">🧾 № ${p.id}</div>
+
       <b>📦 ${p.product_name}</b>
-      <div class="row"><span>💰 Ціна</span><span>${p.price}</span></div>
-      <div class="row"><span>📅 Дата</span><span>${new Date(p.created_at).toLocaleString()}</span></div>
+
+      <div class="row">
+        <span>💰 Ціна</span>
+        <span>${p.price} 💸</span>
+      </div>
+
+      <div class="row">
+        <span>📅 Дата</span>
+        <span>
+          ${new Date(p.created_at).toLocaleString('uk-UA',{
+            timeZone:'Europe/Kyiv',
+            year:'numeric',
+            month:'2-digit',
+            day:'2-digit',
+            hour:'2-digit',
+            minute:'2-digit'
+          })}
+        </span>
+      </div>
+
       <div class="row">
         <span>📌 Статус</span>
         <span class="${p.status==='pending'?'pending':'done'}">
@@ -91,7 +119,7 @@ async function loadHistory(){
         </span>
       </div>
     `
-    list.appendChild(d)
+    list.appendChild(el)
   })
 }
 
