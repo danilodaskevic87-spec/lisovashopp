@@ -1,4 +1,4 @@
-<!DOCTYPE html><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
@@ -34,5 +34,27 @@ button{width:100%;padding:12px;margin-top:10px;border:none;border-radius:10px;ba
 
 <script>
 const sb = supabase.createClient(
- 'https://mefzopeenhfd
+ 'https://mefzopeenhfdqfatbjaq.supabase.co',
+ 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1lZnpvcGVlbmhmZHFmYXRiamFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxOTg1MjQsImV4cCI6MjA4Mjc3NDUyNH0.l_yS9Vd18eb9VFs8i9u-jl9604eUY4l42tdfXEjOdhI'
+)
 
+async function login(){
+  await sb.auth.signInWithPassword({email:email.value,password:password.value})
+  loadProfile()
+}
+
+async function loadProfile(){
+  const u = (await sb.auth.getUser()).data.user
+  if(!u) return
+  const {data} = await sb.from('bank').select('name,balance').eq('user_id',u.id).maybeSingle()
+  loginBox.style.display='none'
+  profileBox.style.display='block'
+  userName.textContent=data.name
+  balance.textContent=data.balance+' 💸'
+}
+
+async function logout(){ await sb.auth.signOut(); location.reload() }
+loadProfile()
+</script>
+</body>
+</html>
