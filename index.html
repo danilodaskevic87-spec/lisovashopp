@@ -126,17 +126,11 @@ const sb = supabase.createClient(
 /* === LOGIN === */
 loginBtn.onclick = async () => {
   msg.textContent = '⏳ Вхід...'
-
   const { error } = await sb.auth.signInWithPassword({
     email: email.value,
     password: password.value
   })
-
-  if (error) {
-    msg.textContent = error.message
-  } else {
-    loadProfile()
-  }
+  if (error) msg.textContent = error.message
 }
 
 /* === REGISTER === */
@@ -145,23 +139,21 @@ registerBtn.onclick = async () => {
     email: email.value,
     password: password.value
   })
-
   msg.textContent = error ? error.message : '📧 Перевір пошту'
 }
 
 /* === LOAD PROFILE === */
 async function loadProfile() {
-  const { data: userRes } = await sb.auth.getUser()
-  const user = userRes.user
-  if (!user) return
+  const { data } = await sb.auth.getUser()
+  if (!data.user) return
 
-  const { data, error } = await sb
+  const { data: profile } = await sb
     .from('bank')
     .select('idd,name,rank,balance,is_vip_user')
-    .eq('user_id', user.id)
+    .eq('user_id', data.user.id)
     .maybeSingle()
 
-  if (error || !data) {
+  if (!profile) {
     msg.textContent = '❌ Профіль не знайдено'
     return
   }
@@ -169,11 +161,11 @@ async function loadProfile() {
   loginBox.style.display = 'none'
   profileBox.style.display = 'block'
 
-  idd.textContent = data.idd
-  userName.textContent = data.name
-  rank.textContent = data.rank
-  balance.textContent = data.balance + ' 💸'
-  vip.textContent = data.is_vip_user ? 'YES ⭐' : 'NO'
+  idd.textContent = profile.idd
+  userName.textContent = profile.name
+  rank.textContent = profile.rank
+  balance.textContent = profile.balance + ' 💸'
+  vip.textContent = profile.is_vip_user ? 'YES ⭐' : 'NO'
 }
 
 /* === LOGOUT === */
@@ -187,10 +179,4 @@ function goOshop() {
   location.href = 'oshop.html'
 }
 
-/* === AUTO LOAD IF LOGGED === */
-loadProfile()
-</script>
-
-</body>
-</html>
-
+/
